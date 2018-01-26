@@ -113,7 +113,7 @@ I used a learning rate of 0.001 and trained the net over 10 epochs with a batch 
 
 My final model results were:
 * training set accuracy of 0.99
-* validation set accuracy of 0.946
+* validation set accuracy of 0.958
 * test set accuracy of 0.93
 
 If a well known architecture was chosen:
@@ -155,13 +155,13 @@ Here are the results of the prediction:
 | Ahead only			| Ahead only      							    |
 
 
-The model was able to correctly guess 5 of the 5 traffic signs, which gives an accuracy of 100%.
+The model was able to correctly guess 6 of the 6 traffic signs, which gives an accuracy of 100%.
 
 #### 3. Describe how certain the model is when predicting on each of the five new images by looking at the softmax probabilities for each prediction. Provide the top 5 softmax probabilities for each image along with the sign type of each probability. (OPTIONAL: as described in the "Stand Out Suggestions" part of the rubric, visualizations can also be provided such as bar charts)
 
 The code for making predictions on my final model is located in the 25th cell of the Ipython notebook.
 
-I added the plotted probabilities to the html file. It is clear that any sign can be detected in a relatively good probability. Especially sign #2 shows that partly occluded signs can be predicted with a probability of 85%.
+I added the plotted probabilities to the html file. It is clear that any (unknown) sign can be detected in a relatively good probability. Especially sign #2 shows that partly occluded signs can be predicted with a probability of 85%.
 
 ### (Optional) Visualizing the Neural Network (See Step 4 of the Ipython notebook for more details)
 #### 1. Discuss the visual output of your trained network's feature maps. What characteristics did the neural network use to make classifications?
