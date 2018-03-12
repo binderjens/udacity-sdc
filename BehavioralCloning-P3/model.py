@@ -2,6 +2,7 @@ import cv2
 import csv
 import numpy as np
 
+# loading the csv data into lines
 lines = []
 with open('./data/driving_log.csv') as csvfile:
     reader = csv.reader(csvfile)
@@ -35,17 +36,18 @@ for image, measurement in zip(images,measurements):
     augmented_images.append(cv2.flip(image,1)) # flip around y axis
     augmented_measurements.append(measurement * -1.0)
 
+# define features and labels.
 X_train = np.array(augmented_images)
 Y_Train = np.array(augmented_measurements)
 
 from keras.models import Sequential
 from keras.layers import Flatten, Dense, Lambda
 from keras.layers.convolutional import Convolution2D,  Cropping2D
-from keras.layers.pooling import MaxPooling2D
 
 # using NVidias end-to-end approach
 # https://devblogs.nvidia.com/deep-learning-self-driving-cars/
 model = Sequential()
+# normalize the images with the help of Keras.Lambda
 model.add(Lambda(lambda x: x / 255.0 - 0.5, input_shape=(160,320,3)))
 # cropping top and bottom to not use landscape and hood
 model.add(Cropping2D(cropping=((70,25),(0,0))))
@@ -57,13 +59,16 @@ model.add(Convolution2D(64,3,3,activation='relu'))
 model.add(Convolution2D(64,3,3,activation='relu'))
 # flattening layer 
 model.add(Flatten())
-# four fully connected layers
+# Three fully connected layers
 model.add(Dense(100))
 model.add(Dense(50))
 model.add(Dense(10))
+# Output layer
 model.add(Dense(1))
 
+# compile the model using adam optimizer - no need to tune the learning rate
 model.compile(loss='mse', optimizer='adam')
+# start learnin - using 20% for validation - use 3 epochs
 model.fit(X_train, Y_Train, validation_split=0.2, shuffle=True, nb_epoch=3)
 
 model.save('model.h5')
