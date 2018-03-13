@@ -9,36 +9,33 @@ with open('./data/driving_log.csv') as csvfile:
     for line in reader:    
         lines.append(line)
 
-images = []
-measurements = []
-for line in lines:
-    # load center, left and right image
-    for i in range(3):
-        source_path = line[i]
-        filename = source_path.split('\\')[-1]
-        current_path = './data/IMG/' + filename
-        image = cv2.imread(current_path)
-        images.append(image)
-    # correct the left and right image by an offset.
-    offset=0.2
-    measurement = float(line[3])
-    measurements.append(measurement)
-    measurements.append(measurement+offset) # left image - add offset
-    measurements.append(measurement-offset) # right image 
+#randomize input array
+np.random.shuffle(lines)
+offset=0.2
+offsets=(0,offset,-offset)
 
-# Augment training data set by flipping them horizontally.
-# This saves me another test drive in the opposite direction
-augmented_images = []
-augmented_measurements = []
-for image, measurement in zip(images,measurements):
-    augmented_images.append(image)
-    augmented_measurements.append(measurement) 
-    augmented_images.append(cv2.flip(image,1)) # flip around y axis
-    augmented_measurements.append(measurement * -1.0)
-
-# define features and labels.
-X_train = np.array(augmented_images)
-Y_Train = np.array(augmented_measurements)
+def generate_images(batch_size=32):
+    while True:
+        images = []
+        measurements = []
+        random_ind = np.random.randint(0, len(lines), batch_size)
+        for ind in random_ind:
+            line=lines[ind]
+            i = np.random.randint(0, 3)
+            # load center, left and right image
+            source_path = line[i]
+            filename = source_path.split('\\')[-1]
+            current_path = './data/IMG/' + filename
+            image = cv2.imread(current_path)
+            measurement = float(line[3])
+            random_coin = np.random.randint(0,2)
+            if(random_coin==1):
+                images.append(cv2.flip(image,1))
+                measurements.append(measurement*-1.0)
+            else:
+                images.append(image)
+                measurements.append(measurement+offsets[i])
+        yield np.array(images), np.array(measurements)
 
 from keras.models import Sequential
 from keras.layers import Flatten, Dense, Lambda
@@ -60,15 +57,20 @@ model.add(Convolution2D(64,3,3,activation='relu'))
 # flattening layer 
 model.add(Flatten())
 # Three fully connected layers
-model.add(Dense(100))
-model.add(Dense(50))
-model.add(Dense(10))
+model.add(Dense(100,activation='relu'))
+model.add(Dense(50,activation='relu'))
+model.add(Dense(10,activation='relu'))
 # Output layer
 model.add(Dense(1))
 
 # compile the model using adam optimizer - no need to tune the learning rate
 model.compile(loss='mse', optimizer='adam')
 # start learnin - using 20% for validation - use 3 epochs
-model.fit(X_train, Y_Train, validation_split=0.2, shuffle=True, nb_epoch=3)
+model.fit_generator(generate_images(),
+                    samples_per_epoch=5592,
+                    nb_epoch=3,
+                    validation_data=generate_images(),
+                    nb_val_samples=1398,
+                    verbose=1)
 
 model.save('model.h5')
