@@ -18,23 +18,25 @@ def generate_images(batch_size=32):
     while True:
         images = []
         measurements = []
+        # randomize the used line
         random_ind = np.random.randint(0, len(lines), batch_size)
         for ind in random_ind:
             line=lines[ind]
+            # load center, left or right image based on random number
             i = np.random.randint(0, 3)
-            # load center, left and right image
             source_path = line[i]
             filename = source_path.split('\\')[-1]
             current_path = './data/IMG/' + filename
             image = cv2.imread(current_path)
-            measurement = float(line[3])
+            measurement = float(line[3])+offsets[i]
             random_coin = np.random.randint(0,2)
+            # flip randomly the image
             if(random_coin==1):
                 images.append(cv2.flip(image,1))
                 measurements.append(measurement*-1.0)
             else:
                 images.append(image)
-                measurements.append(measurement+offsets[i])
+                measurements.append(measurement)
         yield np.array(images), np.array(measurements)
 
 from keras.models import Sequential
