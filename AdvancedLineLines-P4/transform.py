@@ -67,9 +67,8 @@ def combined_thresh(img, sobel_kernel=3, sobel_thresh=(0,255), mag_thresh=(0, 25
     return color_binary
 
 # perspective transform
-def transform(img,src,dst):
+def transform(img,M):
     img_size = (img.shape[1], img.shape[0])
-    M = cv2.getPerspectiveTransform(src, dst)
     # Warp the image using OpenCV warpPerspective()
     warped = cv2.warpPerspective(img, M, img_size)
     return warped
