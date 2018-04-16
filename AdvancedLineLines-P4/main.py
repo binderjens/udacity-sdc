@@ -42,16 +42,14 @@ def save_image(img,filename,img_suffix):
     name = get_save_name(filename,img_suffix)
     cv2.imwrite(name,img)
 
-def create_lane_image(undist_img, warped, left_fit, right_fit):
+def create_lane_image(undist_img, left_line, right_line, ploty):
     img_shape=undist_img.shape
     img_size = (img_shape[1], img_shape[0])
-    warp_zero = np.zeros_like(warped).astype(np.uint8)
+    warp_zero = np.zeros_like(undist_img).astype(np.uint8)
     out_img = np.dstack((warp_zero, warp_zero, warp_zero))
-    
-    [left_fitx, right_fitx, ploty] = lane_detection.generate_fitting(warp_zero.shape[0],left_fit,right_fit)
 
-    left_line_window = np.array(np.transpose(np.vstack([left_fitx, ploty])))
-    right_line_window = np.array(np.flipud(np.transpose(np.vstack([right_fitx, ploty]))))
+    left_line_window = np.array(np.transpose(np.vstack([left_line, ploty])))
+    right_line_window = np.array(np.flipud(np.transpose(np.vstack([right_line, ploty]))))
     line_points = np.vstack((left_line_window, right_line_window))
     cv2.fillPoly(out_img, np.int_([line_points]), [0,255, 0])
     unwarped = cv2.warpPerspective(out_img, M_inv, img_size , flags=cv2.INTER_LINEAR)
@@ -111,10 +109,16 @@ def pipeline_vid(img):
     # 3. transform image based on src and dst defined above & save
     img_transform = transform.transform(img_transform,M)
 
-    [poly_left, poly_right, line_left, line_right] = 
+    [poly_left, poly_right] = 
     lane_detection.generate_polyline(img_transform, left_fit, right_fit,left_polylines,right_polylines)
+    if len(poly_left)!=0 and len(poly_right)!=0:
+        [line_left, line_right] = generate_polyline_from_polynom(img_transform.shape[0],left_fit,right_fit)
+        left_polylines.append(line_left)
+        right_polylines.append(line_right)
+    else:
+        left_line = left_polylines[-1]
     
-    lane_img = create_lane_image(img,img_transform,left_fit,right_fit)
+    lane_img = create_lane_image(img,img_transform,left_line,right_line)
 
     return lane_img
 
