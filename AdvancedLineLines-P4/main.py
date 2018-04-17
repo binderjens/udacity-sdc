@@ -2,10 +2,10 @@ import pickle
 import glob
 import cv2
 import transform
-import lane_detection
+from Lane import Lane
 import numpy as np
-import collections
 from moviepy.editor import VideoFileClip
+from Lane import LaneSide
 
 # the calibration has been done before and has been serialized as a pkl file
 with open('calibration.pkl', 'rb') as f:
@@ -27,11 +27,8 @@ dst=np.float32([[200,720],
 M = cv2.getPerspectiveTransform(src, dst)
 M_inv = cv2.getPerspectiveTransform(dst, src)
 
-left_fit = []
-right_fit = []
-
-left_polylines=collections.deque(maxlen=10)
-right_polylines=collections.deque(maxlen=10)
+LeftLane = Lane(LaneSide.Left)
+RightLane = Lane(LaneSide.Right)
 
 def get_save_name(filename,img_suffix):
     name = filename.split('.')[0]
@@ -42,14 +39,17 @@ def save_image(img,filename,img_suffix):
     name = get_save_name(filename,img_suffix)
     cv2.imwrite(name,img)
 
-def create_lane_image(undist_img, left_line, right_line, ploty):
-    img_shape=undist_img.shape
+def create_lane_image(undist_img, warped, left, right):
+    img_shape = warped.shape
     img_size = (img_shape[1], img_shape[0])
-    warp_zero = np.zeros_like(undist_img).astype(np.uint8)
+    warp_zero = np.zeros_like(warped).astype(np.uint8)
     out_img = np.dstack((warp_zero, warp_zero, warp_zero))
 
-    left_line_window = np.array(np.transpose(np.vstack([left_line, ploty])))
-    right_line_window = np.array(np.flipud(np.transpose(np.vstack([right_line, ploty]))))
+    [left_line, ploty_left] = left.get_fit_line(warped.shape[0])
+    [right_line, ploty_right] = right.get_fit_line(warped.shape[0])
+
+    left_line_window = np.array(np.transpose(np.vstack([left_line, ploty_left])))
+    right_line_window = np.array(np.flipud(np.transpose(np.vstack([right_line, ploty_right]))))
     line_points = np.vstack((left_line_window, right_line_window))
     cv2.fillPoly(out_img, np.int_([line_points]), [0,255, 0])
     unwarped = cv2.warpPerspective(out_img, M_inv, img_size , flags=cv2.INTER_LINEAR)
@@ -73,15 +73,15 @@ def pipeline_img(img, img_name):
                                     mag_thresh=(50,120),
                                     dir_thresh=(np.pi/6, np.pi/2),
                                     s_thresh=(140,255))
-    # save binary image to output folder                                              
+    # save binary image to output folder
     save_image(img_transform*255,img_name,'binary')
-    
+
     # transform image based on src and dst defined above & save
     img_transform = transform.transform(img_transform,M)
     save_image(img_transform*255,img_name,'transform')
 
-    name = get_save_name(out_fname,'lanes_found')
-    [left_fit, right_fit, left_lane_inds, right_lane_inds ] = lane_detection.generate_polyline(img_transform, name)
+    name = get_save_name(img_name,'lanes_found')
+    [left_fit, right_fit] = lane_detection.generate_polyline(img_transform, name)
 
     # create a lane model
     lane_img = create_lane_image(img,img_transform,left_fit,right_fit)
@@ -90,10 +90,8 @@ def pipeline_img(img, img_name):
     return lane_img
 
 def pipeline_vid(img):
-    global left_fit
-    global right_fit
-    global left_polylines
-    global right_polylines
+    global LeftLane
+    global RightLane
 
     # 1. undistort image
     img = transform.undistort(img,mtx,dist)
@@ -109,16 +107,11 @@ def pipeline_vid(img):
     # 3. transform image based on src and dst defined above & save
     img_transform = transform.transform(img_transform,M)
 
-    [poly_left, poly_right] = 
-    lane_detection.generate_polyline(img_transform, left_fit, right_fit,left_polylines,right_polylines)
-    if len(poly_left)!=0 and len(poly_right)!=0:
-        [line_left, line_right] = generate_polyline_from_polynom(img_transform.shape[0],left_fit,right_fit)
-        left_polylines.append(line_left)
-        right_polylines.append(line_right)
-    else:
-        left_line = left_polylines[-1]
-    
-    lane_img = create_lane_image(img,img_transform,left_line,right_line)
+    # 4. create new polynom values for current image
+    LeftLane.find_lane_for_frame(img_transform)
+    RightLane.find_lane_for_frame(img_transform)
+
+    lane_img = create_lane_image(img,img_transform,LeftLane,RightLane)
 
     return lane_img
 
