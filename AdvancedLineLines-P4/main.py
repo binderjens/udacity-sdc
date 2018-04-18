@@ -6,6 +6,7 @@ from Lane import Lane
 import numpy as np
 from moviepy.editor import VideoFileClip
 from Lane import LaneSide
+import lane_detection
 
 # the calibration has been done before and has been serialized as a pkl file
 with open('calibration.pkl', 'rb') as f:
@@ -33,7 +34,7 @@ RightLane = Lane(LaneSide.Right)
 def get_save_name(filename,img_suffix):
     name = filename.split('.')[0]
     out_fname= name + '_' + img_suffix + '.jpg'
-    return output_folder+'\\'+out_fname
+    return output_folder+'/'+out_fname
 
 def save_image(img,filename,img_suffix):
     name = get_save_name(filename,img_suffix)
@@ -81,10 +82,18 @@ def pipeline_img(img, img_name):
     save_image(img_transform*255,img_name,'transform')
 
     name = get_save_name(img_name,'lanes_found')
+<<<<<<< 3d9417955b60a981500ae1e97ed5182ac57727ee
     [left_fit, right_fit] = lane_detection.generate_polyline(img_transform, name)
+=======
 
-    # create a lane model
-    lane_img = create_lane_image(img,img_transform,left_fit,right_fit)
+    LeftLane.find_lane_for_frame(img_transform)
+    RightLane.find_lane_for_frame(img_transform)
+    
+    lane_detection.plot_polyline(img_transform, name, LeftLane, RightLane)
+
+    lane_img = create_lane_image(img,img_transform,LeftLane,RightLane)
+>>>>>>> minor improvements
+
     save_image(lane_img,img_name,'result')
 
     return lane_img
@@ -110,20 +119,33 @@ def pipeline_vid(img):
     # 4. create new polynom values for current image
     LeftLane.find_lane_for_frame(img_transform)
     RightLane.find_lane_for_frame(img_transform)
+<<<<<<< 3d9417955b60a981500ae1e97ed5182ac57727ee
+
+    lane_img = create_lane_image(img,img_transform,LeftLane,RightLane)
+
+    return lane_img
+=======
+>>>>>>> minor improvements
 
     lane_img = create_lane_image(img,img_transform,LeftLane,RightLane)
 
     return lane_img
 
-# # loop over all test images
-# for fname in test_images:
-#     # load image
-#     img = cv2.imread(fname)
-#     out_fname = fname.split('\\')[1]
-
-#     out_img=pipeline_img(img,out_fname)
-
+<<<<<<< 3d9417955b60a981500ae1e97ed5182ac57727ee
 output = 'project_video_output.mp4'
 clip1 = VideoFileClip("project_video.mp4")
 white_clip = clip1.fl_image(pipeline_vid)
 white_clip.write_videofile(output, audio=False)
+=======
+# loop over all test images
+for fname in test_images:
+    # load image
+    img = cv2.imread(fname)
+    out_fname = fname.split('/')[1]
+    out_img=pipeline_img(img,out_fname)
+
+# output = 'project_video_output.mp4'
+# clip1 = VideoFileClip("project_video.mp4")
+# white_clip = clip1.fl_image(pipeline_vid)
+# white_clip.write_videofile(output, audio=False)
+>>>>>>> minor improvements

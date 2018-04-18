@@ -164,3 +164,41 @@ def generate_polyline(binary_warped, left_lane, right_lane, name='' ):
 #         plt.close()
 
     return [left_fit, right_fit]
+
+def plot_polyline(binary_warped, name, left_lane, right_lane):
+
+        [left_fitx, ploty] = left_lane.get_fit_line(binary_warped.shape[0])
+        [right_fitx, _] = right_lane.get_fit_line(binary_warped.shape[0])
+
+        # [left_fitx, right_fitx, ploty] = generate_polyline_from_polynom(binary_warped.shape[0],left_fit,right_fit)
+        # Create an image to draw on and an image to show the selection window
+        out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
+        window_img = np.zeros_like(out_img)
+        # Color in left and right line pixels
+        out_img[left_lane.y, left_lane.x] = [255, 0, 0]
+        out_img[right_lane.y, right_lane.x] = [0, 0, 255]
+ 
+        margin = 100
+        # Generate a polygon to illustrate the search window area
+        # And recast the x and y points into usable format for cv2.fillPoly()
+        left_line_window1 = np.array([np.transpose(np.vstack([left_fitx-margin, ploty]))])
+        left_line_window2 = np.array([np.flipud(np.transpose(np.vstack([left_fitx+margin, 
+                                    ploty])))])
+        left_line_pts = np.hstack((left_line_window1, left_line_window2))
+        right_line_window1 = np.array([np.transpose(np.vstack([right_fitx-margin, ploty]))])
+        right_line_window2 = np.array([np.flipud(np.transpose(np.vstack([right_fitx+margin, 
+                                    ploty])))])
+        right_line_pts = np.hstack((right_line_window1, right_line_window2))
+ 
+        # Draw the lane onto the warped blank image
+        cv2.fillPoly(window_img, np.int_([left_line_pts]), (0,255, 0))
+        cv2.fillPoly(window_img, np.int_([right_line_pts]), (0,255, 0))
+        result = cv2.addWeighted(out_img, 1, window_img, 0.3, 0)
+        plt.imshow(result)
+        plt.plot(left_fitx, ploty, color='yellow')
+        plt.plot(right_fitx, ploty, color='yellow')
+        plt.xlim(0, 1280)
+        plt.ylim(720, 0)
+ 
+        plt.savefig(name)
+        plt.close()
