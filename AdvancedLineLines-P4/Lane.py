@@ -1,25 +1,41 @@
 import numpy as np
 from collections import deque
 from enum import Enum
+import cv2
 
 class LaneSide(Enum):
     Left = 1
     Right = 2
 
 class Lane:
-    def __init__(self, side):
+    def __init__(self, side, name=''):
         self.found_last = False
+        
+        self.debug=False
+        if(name!=''):
+            self.debug=True
+            self.name = name
         
         # enum for the side of the lane
         self.side = side
         
         # member variable for polyfit values - store last n values
-        self.polyfit_0 = deque(maxlen=10)
-        self.polyfit_1 = deque(maxlen=10)
-        self.polyfit_2 = deque(maxlen=10)
+        self.polyfit_0 = deque(maxlen=15)
+        self.polyfit_1 = deque(maxlen=15)
+        self.polyfit_2 = deque(maxlen=15)
 
         self.radius = None
 
+        # last line
+        self.x = None
+        self.y = None
+        
+    def reset(self):
+        self.found_last = False
+        self.polyfit_0 = deque(maxlen=15)
+        self.polyfit_1 = deque(maxlen=15)
+        self.polyfit_2 = deque(maxlen=15)
+        self.radius = None
         # last line
         self.x = None
         self.y = None
@@ -34,6 +50,9 @@ class Lane:
         histogram=np.sum(binary_warped[binary_warped.shape[0]//2:,:], axis=0)
         midpoint = np.int(histogram.shape[0]/2)
     
+        if(self.debug==True):
+            out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
+
         # Find the peak of the halves of the histogram
         # These will be the starting point for the left and right lines    
         if self.side == LaneSide.Left:
@@ -66,8 +85,10 @@ class Lane:
             win_x_low = x_current - margin
             win_x_high = x_current + margin
             # Identify the nonzero pixels in x and y within the window
-            good_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & 
-            (nonzerox >= win_x_low) &  (nonzerox < win_x_high)).nonzero()[0]
+            if(self.debug==True):
+                # Draw the windows on the visualization image
+                cv2.rectangle(out_img,(win_x_low,win_y_low),(win_x_high,win_y_high),(0,255,0), 2) 
+            good_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_x_low) &  (nonzerox < win_x_high)).nonzero()[0]
             # Append these indices to the lists
             lane_inds.append(good_inds)
             # If you found > minpix pixels, recenter next window on their mean position
@@ -105,7 +126,7 @@ class Lane:
             self.found_last = True
             self.x = x
             self.y = y
-            fit = np.polyfit(self.x,self.y,2)
+            fit = np.polyfit(self.y,self.x,2)
         
             self.polyfit_0.append(fit[0])
             self.polyfit_1.append(fit[1])

@@ -111,7 +111,7 @@ def generate_polyline_windowed(binary_warped, name=''):
 
     return [left_lane_inds, right_lane_inds]
 
-def generate_polyline(binary_warped, left_lane, right_lane, name='' ):
+def generate_polyline(binary_warped, left_fit, right_fit, name='' ):
 
     # if the buffer of polylines is empty - create new polyline from scratch with windowing    
     if len(left_fit)==0 or len(right_fit) == 0:

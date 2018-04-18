@@ -7,6 +7,7 @@ import numpy as np
 from moviepy.editor import VideoFileClip
 from Lane import LaneSide
 import lane_detection
+import os
 
 # the calibration has been done before and has been serialized as a pkl file
 with open('calibration.pkl', 'rb') as f:
@@ -28,13 +29,10 @@ dst=np.float32([[200,720],
 M = cv2.getPerspectiveTransform(src, dst)
 M_inv = cv2.getPerspectiveTransform(dst, src)
 
-LeftLane = Lane(LaneSide.Left)
-RightLane = Lane(LaneSide.Right)
-
 def get_save_name(filename,img_suffix):
     name = filename.split('.')[0]
     out_fname= name + '_' + img_suffix + '.jpg'
-    return output_folder+'/'+out_fname
+    return os.path.join(output_folder,out_fname)
 
 def save_image(img,filename,img_suffix):
     name = get_save_name(filename,img_suffix)
@@ -58,6 +56,9 @@ def create_lane_image(undist_img, warped, left, right):
     return result
 
 def pipeline_img(img, img_name):
+    LeftLane = Lane(LaneSide.Left)
+    RightLane = Lane(LaneSide.Right)
+
     # undistort image
     img = transform.undistort(img,mtx,dist)
     save_image(img,img_name,'undistort')
@@ -68,12 +69,8 @@ def pipeline_img(img, img_name):
     save_image(img_lines,img_name,'undistort_lines')
 
     # create combined threshold
-    img_transform = transform.combined_thresh( img,
-                                    sobel_kernel=3,
-                                    sobel_thresh=(40,120),
-                                    mag_thresh=(50,120),
-                                    dir_thresh=(np.pi/6, np.pi/2),
-                                    s_thresh=(140,255))
+    img_transform = transform.img_transform = transform.combined_thresh(img)
+    
     # save binary image to output folder
     save_image(img_transform*255,img_name,'binary')
 
@@ -82,9 +79,6 @@ def pipeline_img(img, img_name):
     save_image(img_transform*255,img_name,'transform')
 
     name = get_save_name(img_name,'lanes_found')
-<<<<<<< 3d9417955b60a981500ae1e97ed5182ac57727ee
-    [left_fit, right_fit] = lane_detection.generate_polyline(img_transform, name)
-=======
 
     LeftLane.find_lane_for_frame(img_transform)
     RightLane.find_lane_for_frame(img_transform)
@@ -92,60 +86,61 @@ def pipeline_img(img, img_name):
     lane_detection.plot_polyline(img_transform, name, LeftLane, RightLane)
 
     lane_img = create_lane_image(img,img_transform,LeftLane,RightLane)
->>>>>>> minor improvements
 
     save_image(lane_img,img_name,'result')
 
     return lane_img
 
+#loop over all test images
+for fname in test_images:
+    # load image
+    img = cv2.imread(fname)
+    out_fname = fname.split(os.sep)[1]
+    out_img=pipeline_img(img,out_fname)
+
+#exit()
+
+LeftLane = Lane(LaneSide.Left)
+RightLane = Lane(LaneSide.Right)
+
 def pipeline_vid(img):
-    global LeftLane
-    global RightLane
 
     # 1. undistort image
     img = transform.undistort(img,mtx,dist)
 
     # 2. create combined threshold
-    img_transform = transform.combined_thresh( img,
-                                    sobel_kernel=3,
-                                    sobel_thresh=(40,120),
-                                    mag_thresh=(50,120),
-                                    dir_thresh=(np.pi/6, np.pi/2),
-                                    s_thresh=(140,255))
+    img_transform = transform.combined_thresh(img)
 
     # 3. transform image based on src and dst defined above & save
     img_transform = transform.transform(img_transform,M)
 
     # 4. create new polynom values for current image
-    LeftLane.find_lane_for_frame(img_transform)
-    RightLane.find_lane_for_frame(img_transform)
-<<<<<<< 3d9417955b60a981500ae1e97ed5182ac57727ee
+    found = LeftLane.find_lane_for_frame(img_transform)
+    if(found != True):
+        LeftLane.find_lane_for_frame(img_transform)
+    
+    found = RightLane.find_lane_for_frame(img_transform)
+    if(found != True):    
+        RightLane.find_lane_for_frame(img_transform)
 
     lane_img = create_lane_image(img,img_transform,LeftLane,RightLane)
 
     return lane_img
-=======
->>>>>>> minor improvements
 
-    lane_img = create_lane_image(img,img_transform,LeftLane,RightLane)
-
-    return lane_img
-
-<<<<<<< 3d9417955b60a981500ae1e97ed5182ac57727ee
-output = 'project_video_output.mp4'
+output1 = 'project_video_output.mp4'
+output2 = 'challenge_video_output.mp4'
+output3 = 'harder_challenge_video_output.mp4'
 clip1 = VideoFileClip("project_video.mp4")
+clip2 = VideoFileClip("challenge_video.mp4")
+clip3 = VideoFileClip("harder_challenge_video.mp4")
 white_clip = clip1.fl_image(pipeline_vid)
-white_clip.write_videofile(output, audio=False)
-=======
-# loop over all test images
-for fname in test_images:
-    # load image
-    img = cv2.imread(fname)
-    out_fname = fname.split('/')[1]
-    out_img=pipeline_img(img,out_fname)
-
-# output = 'project_video_output.mp4'
-# clip1 = VideoFileClip("project_video.mp4")
-# white_clip = clip1.fl_image(pipeline_vid)
-# white_clip.write_videofile(output, audio=False)
->>>>>>> minor improvements
+white_clip.write_videofile(output1, audio=False)
+LeftLane.reset()
+RightLane.reset()
+white_clip = clip2.fl_image(pipeline_vid)
+white_clip.write_videofile(output2, audio=False)
+exit()
+LeftLane.reset()
+RightLane.reset()
+white_clip = clip3.fl_image(pipeline_vid)
+white_clip.write_videofile(output3, audio=False)

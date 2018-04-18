@@ -10,61 +10,40 @@ def scale_sobel(img):
     return np.uint8(255*img/np.max(img))
 
 # sobel
-def combined_thresh(img, sobel_kernel=3, sobel_thresh=(0,255), mag_thresh=(0, 255), dir_thresh=(0, np.pi/2), s_thresh=(0,255)):
+def combined_thresh(img, hls_s_thresh=(180,255), hls_l_thresh=(120,255), luv_l_thresh=(225,255), lab_b_thresh=(155,200)):
 
     # get hue lightness and saturation of the image
-    hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS).astype(np.float)
-    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY).astype(np.float)
-    # l_channel = hls[:,:,1]
-    # saturation is the preferred feature
-    s_channel = hls[:,:,2]
+    hls = cv2.cvtColor(img, cv2.COLOR_BGR2HLS).astype(np.float)
+    luv = cv2.cvtColor(img,cv2.COLOR_BGR2LUV).astype(np.float)
+    lab = cv2.cvtColor(img,cv2.COLOR_BGR2LAB).astype(np.float)
     
-    # for completeness - extract also RGB
-    r_channel = img[:,:,0]
-    # g_channel = rgb[:,:,1]
-    # b_channel = rgb[:,:,2]
-    
-
-    sobelx= cv2.Sobel(s_channel, cv2.CV_64F, 1, 0, ksize=sobel_kernel)
-    sobely= cv2.Sobel(s_channel, cv2.CV_64F, 0, 1, ksize=sobel_kernel)
-    
-    sobel_abs_x=np.absolute(sobelx)
-    sobel_abs_y=np.absolute(sobely)
-    
-    scaled_sobel_x = scale_sobel(sobel_abs_x)
-    scaled_sobel_y = scale_sobel(sobel_abs_y)
-
-    gradx = np.zeros_like(scaled_sobel_x)
-    grady = np.zeros_like(scaled_sobel_y)
-
-    gradx[(scaled_sobel_x >= sobel_thresh[0]) & (scaled_sobel_x <= sobel_thresh[1])] = 1
-    grady[(scaled_sobel_y >= sobel_thresh[0]) & (scaled_sobel_y <= sobel_thresh[1])] = 1
-    
-    #mag thresh
-    mag_absSobelxy=np.sqrt(np.square(sobelx)+np.square(sobely))
-    scaled_mag_sobel=scale_sobel(mag_absSobelxy)
-    
-    mag_binary = np.zeros_like(scaled_mag_sobel)
-    mag_binary[(scaled_mag_sobel >= mag_thresh[0]) & (scaled_mag_sobel <= mag_thresh[1])] = 1
-    
-    # dir_thresh
-    absgraddir = np.arctan2(np.absolute(sobely), np.absolute(sobelx)) 
-    dir_binary =  np.zeros_like(absgraddir)
-    dir_binary[(absgraddir >= dir_thresh[0]) & (absgraddir <= dir_thresh[1])] = 1
-    
-    # combine all four thresholds:
-    combined = np.zeros_like(dir_binary)
-    combined[((gradx == 1) & (grady == 1)) | 
-             ((mag_binary == 1) & (dir_binary == 1) ) ] = 1
-    
+    # yellow & white
+    hls_s_channel = hls[:,:,2]
+    # detects shadow
+    hls_l_channel = hls[:,:,1]
+    # white
+    luv_l_channel = luv[:,:,0]
+    # yellow
+    lab_b_channel = lab[:,:,2]
+   
     # Threshold color channel
-    s_binary = np.zeros_like(s_channel)
-    s_binary[(s_channel >= s_thresh[0]) & (s_channel <= s_thresh[1])] = 1
+    hls_s_binary = np.zeros_like(hls_s_channel)
+    hls_s_binary[(hls_s_channel >= hls_s_thresh[0]) & (hls_s_channel <= hls_s_thresh[1])] = 1
     
-    color_binary = np.zeros_like(combined)
-    color_binary[(s_binary > 0) | (combined > 0)] = 1
+    hls_l_binary = np.zeros_like(hls_l_channel)
+    hls_l_binary[(hls_l_channel >= hls_l_thresh[0]) & (hls_l_channel <= hls_l_thresh[1])] = 1
+    
+    luv_l_binary = np.zeros_like(luv_l_channel)
+    luv_l_binary[(luv_l_channel >= luv_l_thresh[0]) & (luv_l_channel <= luv_l_thresh[1])] = 1
+    
+    lab_b_binary = np.zeros_like(lab_b_channel)
+    lab_b_binary[(lab_b_channel >= lab_b_thresh[0]) & (lab_b_channel <= lab_b_thresh[1])] = 1
+    
+    combined_binary = np.zeros_like(hls_s_binary)
+    #combined_binary[(s_binary > 0) | (combined > 0) | (l_binary > 0)] = 1
+    combined_binary[( (hls_s_binary > 0) | (luv_l_binary > 0) | (lab_b_binary > 0) )] = 1
 
-    return color_binary
+    return combined_binary
 
 # perspective transform
 def transform(img,M):
