@@ -20,11 +20,11 @@ class Lane:
         self.side = side
         
         # member variable for polyfit values - store last n values
-        self.polyfit_0 = deque(maxlen=15)
-        self.polyfit_1 = deque(maxlen=15)
-        self.polyfit_2 = deque(maxlen=15)
+        self.polyfit_0 = deque(maxlen=12)
+        self.polyfit_1 = deque(maxlen=12)
+        self.polyfit_2 = deque(maxlen=12)
 
-        self.radius = None
+        self.radius = deque(maxlen=12)
 
         # last line
         self.x = None
@@ -105,9 +105,8 @@ class Lane:
         xvals = self.x
         yvals = self.y
         fit_cr = np.polyfit(yvals*ym_per_pix, xvals*xm_per_pix, 2)
-        self.radius = ((1 + (2*fit_cr[0]*np.max(yvals) + fit_cr[1])**2)**1.5) \
-                                     /np.absolute(2*fit_cr[0])
-        return self.radius
+        self.radius.append(((1 + (2*fit_cr[0]*np.max(yvals) + fit_cr[1])**2)**1.5) / np.absolute(2*fit_cr[0]))
+        return np.mean(self.radius)
     
     def find_lane_for_frame(self,new_binary_warped):
         nonzero = new_binary_warped.nonzero()

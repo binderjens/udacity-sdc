@@ -1,8 +1,8 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 import glob
 import pickle
+import os
 
 num_x = 9 # 9 corners in x-direction
 num_y = 6 # 6 corners in y-direction
@@ -43,5 +43,13 @@ for fname in images:
         
 ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, img_size, None, None)
 
+# save calibration parameters
 with open('calibration.pkl', 'wb') as f:
     pickle.dump([mtx, dist], f)
+    
+for fname in images:
+    img = cv2.imread(fname)
+    undist = cv2.undistort(img, mtx, dist, None, mtx)
+    name = 'undist_' + fname.split(os.sep)[-1]
+    outname = os.path.join('output_images', name)
+    cv2.imwrite(outname,undist)
