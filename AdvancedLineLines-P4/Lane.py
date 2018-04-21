@@ -3,10 +3,6 @@ from collections import deque
 from enum import Enum
 import cv2
 
-class LaneSide(Enum):
-    Left = 1
-    Right = 2
-
 class Lane:
     def __init__(self, side, name=''):
         self.found_last = False
@@ -15,10 +11,7 @@ class Lane:
         if(name!=''):
             self.debug=True
             self.name = name
-        
-        # enum for the side of the lane
-        self.side = side
-        
+
         # member variable for polyfit values - store last n values
         self.polyfit_0 = deque(maxlen=12)
         self.polyfit_1 = deque(maxlen=12)
@@ -46,6 +39,9 @@ class Lane:
                     &(x < (np.mean(self.polyfit_0)*(y**2) + np.mean(self.polyfit_1)*y + np.mean(self.polyfit_2) + margin))) 
         return lane_inds
     
+    def get_midpoint(histogram,midpoint):
+        pass
+    
     def find_lane_windowed(self, binary_warped):
         histogram=np.sum(binary_warped[binary_warped.shape[0]//2:,:], axis=0)
         midpoint = np.int(histogram.shape[0]/2)
@@ -55,10 +51,7 @@ class Lane:
 
         # Find the peak of the halves of the histogram
         # These will be the starting point for the left and right lines    
-        if self.side == LaneSide.Left:
-            x_base = np.argmax(histogram[:midpoint])
-        else:
-            x_base = np.argmax(histogram[midpoint:]) + midpoint    
+        x_base = get_midpoint(histogram,midpoint)
     
         # Choose the number of sliding windows
         nwindows = 9
@@ -140,4 +133,10 @@ class Lane:
         fitx  = np.mean(self.polyfit_0)*ploty**2 + np.mean(self.polyfit_1)*ploty + np.mean(self.polyfit_2)
         return [fitx, ploty]
         
-    
+class RightLane(Lane):
+    def get_midpoint(histogram,midpoint):
+        return np.argmax(histogram[midpoint:]) + midpoint
+
+class LeftLane(Lane):
+    def get_midpoint(histogram,midpoint):
+        return np.argmax(histogram[:midpoint])
