@@ -4,7 +4,7 @@ from enum import Enum
 import cv2
 
 class Lane:
-    def __init__(self, side, name=''):
+    def __init__(self, name=''):
         self.found_last = False
         
         self.debug=False
@@ -38,10 +38,7 @@ class Lane:
         lane_inds = ((x > (np.mean(self.polyfit_0)*(y**2) + np.mean(self.polyfit_1)*y + np.mean(self.polyfit_2) - margin)) 
                     &(x < (np.mean(self.polyfit_0)*(y**2) + np.mean(self.polyfit_1)*y + np.mean(self.polyfit_2) + margin))) 
         return lane_inds
-    
-    def get_midpoint(histogram,midpoint):
-        pass
-    
+        
     def find_lane_windowed(self, binary_warped):
         histogram=np.sum(binary_warped[binary_warped.shape[0]//2:,:], axis=0)
         midpoint = np.int(histogram.shape[0]/2)
@@ -51,7 +48,7 @@ class Lane:
 
         # Find the peak of the halves of the histogram
         # These will be the starting point for the left and right lines    
-        x_base = get_midpoint(histogram,midpoint)
+        x_base = self.get_midpoint(histogram,midpoint)
     
         # Choose the number of sliding windows
         nwindows = 9
@@ -134,9 +131,9 @@ class Lane:
         return [fitx, ploty]
         
 class RightLane(Lane):
-    def get_midpoint(histogram,midpoint):
+    def get_midpoint(self,histogram,midpoint):
         return np.argmax(histogram[midpoint:]) + midpoint
 
 class LeftLane(Lane):
-    def get_midpoint(histogram,midpoint):
+    def get_midpoint(self,histogram,midpoint):
         return np.argmax(histogram[:midpoint])

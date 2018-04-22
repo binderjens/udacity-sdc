@@ -2,10 +2,9 @@ import pickle
 import glob
 import cv2
 import transform
-from Lane import Lane
+from Lane import RightLane, LeftLane
 import numpy as np
 from moviepy.editor import VideoFileClip
-from Lane import LaneSide
 import matplotlib.pyplot as plt
 import os
 
@@ -114,8 +113,8 @@ def plot_polyline(binary_warped, name, left_lane, right_lane):
     plt.close()
 
 def pipeline_img(img, img_name):
-    LeftLane = Lane(LaneSide.Left)
-    RightLane = Lane(LaneSide.Right)
+    left_lane = LeftLane()
+    right_lane = RightLane()
 
     # undistort image
     img = transform.undistort(img,mtx,dist)
@@ -126,24 +125,27 @@ def pipeline_img(img, img_name):
     cv2.polylines(img_lines,[src.astype(int)],True,(0,0,255),3)
     save_image(img_lines,img_name,'undistort_lines')
 
+    # transform image based on src and dst defined above & save
+    img_transform = transform.transform(img,M)
+    # save example image with mask lines for transformed image
+    img_lines = img_transform.copy()
+    cv2.polylines(img_lines,[dst.astype(int)],True,(0,0,255),3)
+    save_image(img_lines,img_name,'transformed_lines')
+
     # create combined threshold
-    img_transform = transform.img_transform = transform.combined_thresh(img)
+    img_transform = transform.combined_thresh(img_transform)
     
     # save binary image to output folder
     save_image(img_transform*255,img_name,'binary')
 
-    # transform image based on src and dst defined above & save
-    img_transform = transform.transform(img_transform,M)
-    save_image(img_transform*255,img_name,'transform')
-
     name = get_save_name(img_name,'lanes_found')
 
-    LeftLane.find_lane_for_frame(img_transform)
-    RightLane.find_lane_for_frame(img_transform)
+    left_lane.find_lane_for_frame(img_transform)
+    right_lane.find_lane_for_frame(img_transform)
     
-    plot_polyline(img_transform, name, LeftLane, RightLane)
+    plot_polyline(img_transform, name, left_lane, right_lane)
 
-    lane_img = create_lane_image(img,img_transform,LeftLane,RightLane)
+    lane_img = create_lane_image(img,img_transform,left_lane,right_lane)
 
     save_image(lane_img,img_name,'result')
 
@@ -156,10 +158,10 @@ for fname in test_images:
     out_fname = fname.split(os.sep)[1]
     out_img=pipeline_img(img,out_fname)
 
-#exit()
+exit()
 
-LeftLane = Lane(LaneSide.Left)
-RightLane = Lane(LaneSide.Right)
+left_lane = LeftLane()
+right_lane = RightLane()
 
 def pipeline_vid(img):
 
@@ -173,20 +175,19 @@ def pipeline_vid(img):
     img_transform = transform.transform(img_transform,M)
 
     # 4. create new polynom values for current image
-    found = LeftLane.find_lane_for_frame(img_transform)
+    found = left_lane.find_lane_for_frame(img_transform)
     if(found != True):
-        LeftLane.find_lane_for_frame(img_transform)
+        left_lane.find_lane_for_frame(img_transform)
     
-    found = RightLane.find_lane_for_frame(img_transform)
+    found = right_lane.find_lane_for_frame(img_transform)
     if(found != True):    
-        RightLane.find_lane_for_frame(img_transform)
+        right_lane.find_lane_for_frame(img_transform)
 
-    lane_img = create_lane_image(img,img_transform,LeftLane,RightLane)
+    lane_img = create_lane_image(img,img_transform,left_lane,right_lane)
 
     return lane_img
 
 output1 = 'project_video_output.mp4'
-
 
 clip1 = VideoFileClip("project_video.mp4")
 white_clip = clip1.fl_image(pipeline_vid)
@@ -194,8 +195,8 @@ white_clip.write_videofile(output1, audio=False)
 
 exit()
 
-LeftLane.reset()
-RightLane.reset()
+left_lane.reset()
+right_lane.reset()
 output2 = 'challenge_video_output.mp4'
 clip2 = VideoFileClip("challenge_video.mp4")
 white_clip = clip2.fl_image(pipeline_vid)

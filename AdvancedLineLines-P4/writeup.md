@@ -21,7 +21,7 @@ The goals / steps of this project are the following:
 [example_1_binary]: ./output_images/straight_lines1_binary.jpg "Binary Example"
 [example_2_undist]: ./output_images/test5_undistort.jpg "Road Transformed"
 [example_2_double]: ./output_images/test5_double.png "Binary Example"
-[image4]: ./examples/warped_straight_lines.jpg "Warp Example"
+[image4]: ./output_images/straight_lines1_transform_double.png "Warp Example"
 [image5]: ./examples/color_fit_lines.jpg "Fit Visual"
 [image6]: ./examples/example_output.jpg "Output"
 [video1]: ./project_video.mp4 "Video"
@@ -98,7 +98,7 @@ The `warper()` function takes as inputs an image (`img`), as well as the transfo
 | 180, 700      | 200, 720      | 
 | 1150, 700     | 1080, 720     |
 | 715, 460      | 1080, 0       |
-| 570, 460      | 100, 0        |
+| 570, 460      | 200, 0        |
 
 I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
 
