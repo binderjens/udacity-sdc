@@ -7,7 +7,7 @@ file2 = sys.argv[2]
 desc1 = sys.argv[3]
 desc2 = sys.argv[4]
 
-fig = plt.figure(figsize=(18,5))
+fig = plt.figure(dpi=250)
 
 a=fig.add_subplot(1,2,1)
 img1 = mpimg.imread(file1)
@@ -21,4 +21,4 @@ imgplot = plt.imshow(img2,cmap='gray')
 a.set_title(desc2)
 
 plt.axis('off')
-plt.savefig(sys.argv[5])
+plt.savefig(sys.argv[5],  bbox_inches='tight')

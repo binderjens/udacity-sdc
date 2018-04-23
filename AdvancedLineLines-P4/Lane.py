@@ -13,9 +13,9 @@ class Lane:
             self.name = name
 
         # member variable for polyfit values - store last n values
-        self.polyfit_0 = deque(maxlen=12)
-        self.polyfit_1 = deque(maxlen=12)
-        self.polyfit_2 = deque(maxlen=12)
+        self.polyfit_0 = deque(maxlen=15)
+        self.polyfit_1 = deque(maxlen=15)
+        self.polyfit_2 = deque(maxlen=15)
 
         self.radius = deque(maxlen=12)
 
@@ -46,8 +46,9 @@ class Lane:
         if(self.debug==True):
             out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
 
-        # Find the peak of the halves of the histogram
-        # These will be the starting point for the left and right lines    
+        # Find the peak in the important half of the histogram - depending on the inherited class
+        # the function get_midpoints() results in the correct midpoint for either the left or right lane
+        # These will be the starting point for the left and right lines
         x_base = self.get_midpoint(histogram,midpoint)
     
         # Choose the number of sliding windows
@@ -85,6 +86,9 @@ class Lane:
             if len(good_inds) > minpix:
                 x_current = np.int(np.mean(nonzerox[good_inds])) 
     
+        if(self.debug==True):
+            cv2.imwrite(self.name,out_img)
+
         # Concatenate the arrays of indices
         lane_inds = np.concatenate(lane_inds)
         return lane_inds

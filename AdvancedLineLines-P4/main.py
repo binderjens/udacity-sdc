@@ -116,6 +116,11 @@ def pipeline_img(img, img_name):
     left_lane = LeftLane()
     right_lane = RightLane()
 
+    left_lane.debug = True
+    right_lane.debug = True
+    left_lane.name=get_save_name(img_name,'windowed_left')
+    right_lane.name=get_save_name(img_name,'windowed_right')
+
     # undistort image
     img = transform.undistort(img,mtx,dist)
     save_image(img,img_name,'undistort')
@@ -158,7 +163,7 @@ for fname in test_images:
     out_fname = fname.split(os.sep)[1]
     out_img=pipeline_img(img,out_fname)
 
-exit()
+#exit()
 
 left_lane = LeftLane()
 right_lane = RightLane()
@@ -168,11 +173,11 @@ def pipeline_vid(img):
     # 1. undistort image
     img = transform.undistort(img,mtx,dist)
 
-    # 2. create combined threshold
-    img_transform = transform.combined_thresh(img)
-
     # 3. transform image based on src and dst defined above & save
-    img_transform = transform.transform(img_transform,M)
+    img_transform = transform.transform(img,M)
+
+    # 2. create combined threshold
+    img_transform = transform.combined_thresh(img_transform)
 
     # 4. create new polynom values for current image
     found = left_lane.find_lane_for_frame(img_transform)
