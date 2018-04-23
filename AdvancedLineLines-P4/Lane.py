@@ -1,6 +1,5 @@
 import numpy as np
 from collections import deque
-from enum import Enum
 import cv2
 
 class Lane:
@@ -12,12 +11,13 @@ class Lane:
             self.debug=True
             self.name = name
 
+        self.buffer_size = 17
         # member variable for polyfit values - store last n values
-        self.polyfit_0 = deque(maxlen=15)
-        self.polyfit_1 = deque(maxlen=15)
-        self.polyfit_2 = deque(maxlen=15)
+        self.polyfit_0 = deque(maxlen=self.buffer_size)
+        self.polyfit_1 = deque(maxlen=self.buffer_size)
+        self.polyfit_2 = deque(maxlen=self.buffer_size)
 
-        self.radius = deque(maxlen=12)
+        self.radius = deque(maxlen=self.buffer_size)
 
         # last line
         self.x = None
@@ -25,10 +25,10 @@ class Lane:
         
     def reset(self):
         self.found_last = False
-        self.polyfit_0 = deque(maxlen=15)
-        self.polyfit_1 = deque(maxlen=15)
-        self.polyfit_2 = deque(maxlen=15)
-        self.radius = None
+        self.polyfit_0.clear()
+        self.polyfit_1.clear()
+        self.polyfit_2.clear()
+        self.radius.clear()
         # last line
         self.x = None
         self.y = None

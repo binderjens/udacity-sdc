@@ -20,7 +20,6 @@ The goals / steps of this project are the following:
 [example_1_undist]: ./output_images/straight_lines1_double.png "Road Transformed"
 [example_2_undist]: ./output_images/test1_double.png "Road Transformed"
 [example_1_binary]: ./output_images/straight_lines1_binary_double.png "Binary Example"
-[example_2_undist]: ./output_images/test5_undistort.jpg "Road Transformed"
 [example_2_binary]: ./output_images/test5_binary_double.png "Binary Example"
 [test1_warp_example]: ./output_images/straight_lines1_transform_double.png "Warp Example"
 [video1]: ./project_video_output.mp4 "Video"
@@ -54,7 +53,7 @@ I then used the output `objpoints` and `imgpoints` to compute the camera calibra
 
 #### 1. Provide an example of a distortion-corrected image.
 
-The calibration parameters collected above with a chessboard were then applied to the real images. 
+The calibration parameters collected above with a chessboard were then applied to the real images.
 When applying `undisort()` (`transform.py` line 5 to 7 ) to this original images we will have the undistorted version. Unfortunately the effect cannot be seen well on the given example.
 
 ![alt text][example_1_undist]
@@ -64,16 +63,9 @@ The changes can be best identified in the corners of the images and the hood of 
 
 #### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
-I used a combination of different color channels to generate a binary image (thresholding steps at lines 13 through 46 in function `combined_thresh()` in file `transform.py`). I decided to use different color channels from different color spaces:
+I first tried to use a combination of different color channels to generate a binary image (thresholding steps at lines 13 through 53 in function `combined_thresh_color()` in file `transform.py`). The idea was to use different color spaces to filter out exactly the bright white and yellow lines. Unfortunately this approach was not very robust and for my resubmission I decided to use the initial approach using a combination of gradients and color thresholding.
 
-color space | channel  | which feature
-------------|----------|-------------------
-HLS         | s channel| detects most of yellow and white lanes
-HLS         | l channel| detects shadows - this information is used to correct difficult parts of the images.
-LUV         | l channel| detects all white lanes
-LAB         | b channel| detects all yellow lanes
-
-Here's an example of my output for this step.
+The threshding can be found in the function `combined_thresh()` in file `transform.py`.
 
 ![alt text][example_1_binary]
 
@@ -156,7 +148,7 @@ The position of the vehicle was calculated by using the averaged position relati
 
 ```python
 position = np.mean((right_line+left_line)/2)
-distance_from_center = abs((640 - position)*3.7/700) 
+distance_from_center = abs((640 - position)*3.7/700)
 ```
 
 #### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
