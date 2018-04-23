@@ -191,5 +191,5 @@ However - applying my current approach to the challenge videos the result was ra
 
 * Apply more pre-processing to the frames - i.e. normalize them.
 * Use adaptive thresholds based on some statistics of the image
+* Start applying gradient thresholding again - I dropped it intentionally to speed up the video pipeline but it could be helpful to identify wrong pixels (which does not belong to a lane).
 * Use the knowledge of the previous frame to adapt the statistics / adaptation of the thresholds.
-* 
