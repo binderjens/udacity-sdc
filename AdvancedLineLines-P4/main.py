@@ -118,8 +118,8 @@ def pipeline_img(img, img_name):
 
     left_lane.debug = True
     right_lane.debug = True
-    left_lane.name=get_save_name(img_name,'6_windowed_left')
-    right_lane.name=get_save_name(img_name,'6_windowed_right')
+    left_lane.name=get_save_name(img_name,'7_windowed_left')
+    right_lane.name=get_save_name(img_name,'7_windowed_right')
 
     # undistort image
     img = transform.undistort(img,mtx,dist)
@@ -130,29 +130,34 @@ def pipeline_img(img, img_name):
     cv2.polylines(img_lines,[src.astype(int)],True,(0,0,255),3)
     save_image(img_lines,img_name,'2_undistort_lines')
 
+    # create combined threshold
+    img_thresh = transform.combined_thresh(img)
+    # save binary image to output folder
+    save_image(img_thresh*255,img_name,'3_binary')
+
     # transform image based on src and dst defined above & save
     img_transform = transform.transform(img,M)
-    save_image(img_transform,img_name,'3_transformed')
+    save_image(img_transform,img_name,'4_transformed')
 
     # save example image with mask lines for transformed image
     img_lines = img_transform.copy()
     cv2.polylines(img_lines,[dst.astype(int)],True,(0,0,255),3)
-    save_image(img_lines,img_name,'4_transformed_lines')
+    save_image(img_lines,img_name,'5_transformed_lines')
 
     # create combined threshold
     img_transform = transform.combined_thresh(img_transform)
     # save binary image to output folder
-    save_image(img_transform*255,img_name,'5_binary')
+    save_image(img_transform*255,img_name,'6_warped_binary')
 
     left_lane.find_lane_for_frame(img_transform)
     right_lane.find_lane_for_frame(img_transform)
 
-    name = get_save_name(img_name,'7_lanes_found')
+    name = get_save_name(img_name,'8_lanes_found')
     plot_polyline(img_transform, name, left_lane, right_lane)
 
     lane_img = create_lane_image(img,img_transform,left_lane,right_lane)
 
-    save_image(lane_img,img_name,'8_result')
+    save_image(lane_img,img_name,'9_result')
 
     return lane_img
 

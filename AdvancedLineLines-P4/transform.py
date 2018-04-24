@@ -54,14 +54,16 @@ def combined_thresh_color(img):
 
 def combined_thresh(img):
     sobel_kernel=3
-    sobel_thresh=(20,100)
+    sobel_thresh=(10,255)
     mag_thresh=(30,100)
     dir_thresh=(np.pi/6, np.pi/2)
-    s_thresh=(90,255)
+    s_thresh=(100,255)
+    l_thresh=(120, 255)
 
-    hls = cv2.cvtColor(img, cv2.COLOR_BGR2HLS).astype(np.float)
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY).astype(np.float)
+    hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS).astype(np.float)
+    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY).astype(np.float)
     s_channel = hls[:,:,2]
+    l_channel = hls[:,:,1]
 
     sobelx= cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=sobel_kernel)
     sobely= cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=sobel_kernel)
@@ -93,11 +95,22 @@ def combined_thresh(img):
     s_binary = np.zeros_like(s_channel)
     s_binary[(s_channel >= s_thresh[0]) & (s_channel <= s_thresh[1])] = 1
 
-    # combine all four thresholds:
-    combined = np.zeros_like(dir_binary)
-    combined[((gradx == 1) & (grady == 1)) |
-             ((mag_binary == 1) & (dir_binary == 1) ) |
-             (s_binary == 1) ] = 1
+    l_binary = np.zeros_like(l_channel)
+    l_binary[(l_channel >= l_thresh[0]) & (l_channel <= l_thresh[1])] = 1
+
+    # R & G thresholds so that yellow lanes are detected well.
+    color_threshold = 50
+    R_channel = img[:,:,0]
+    G_channel = img[:,:,1]
+
+    r_g_binary = np.zeros_like(R_channel)
+    r_g_binary[(R_channel >= color_threshold) & (G_channel >= color_threshold)] = 1
+    combined_condition = np.zeros_like(R_channel)
+    combined_condition[ (gradx == 1) | ((mag_binary == 1) & (dir_binary == 1)) ] = 1
+
+    combined = np.zeros_like(R_channel)
+    combined[ ((r_g_binary==1) & (l_binary==1)) &
+              ((s_binary == 1) | (combined_condition==1)) ] = 1
 
     return combined
 

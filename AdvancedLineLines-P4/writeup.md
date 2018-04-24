@@ -65,18 +65,29 @@ The changes can be best identified in the corners of the images and the hood of 
 
 I first tried to use a combination of different color channels to generate a binary image (thresholding steps at lines 13 through 53 in function `combined_thresh_color()` in file `transform.py`). The idea was to use different color spaces to filter out exactly the bright white and yellow lines. Unfortunately this approach was not very robust and for my resubmission I decided to use the initial approach using a combination of gradients and color thresholding.
 
-The threshding can be found in the function `combined_thresh()` in file `transform.py`.
+The threshding can be found in the function `combined_thresh()` in file `transform.py` from line 55.
+
+I used three kinds of gradients:
+* gradient along the x-axis
+* directed gradient between 30° and 90°
+* magnitude of the gradient
+
+they are all three able to identify the edges in an image
+
+in addition I added three color thresholds:
+* the saturation channel of the HLS color space
+* the R+G channel for detecting the yellow lines
+* the l channel of the HLS color space which identifies shadows
+
+A combination of all six thresholds lead to the result:
 
 ![alt text][example_1_binary]
 
 It can be seen that both yellow and white lanes are correctly identified.
 
-A better result can be seen with a more difficult example which includes some shadows:
-
 ![alt text][example_2_binary]
 
-It can be seen that although some parts of the yellow lane are occluded most of the lane can be identified.
-Including gradient threshold did not gave significant improvements but lead to much more computing effort. The computing time for the example video was 25% faster when only using color thresholds.
+Some parts of the yellow lane are occluded but most of the lane can be identified.
 
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
@@ -131,7 +142,7 @@ Both functions (sliding window and pre-knowledge function) return candidates for
 
 The found lanes can be visualized by re-calculating the lane line from the (averaged) polyline coefficients resulting in
 
-![found lanes](./output_images/straight_lines1_lanes_found.jpg "found lanes in image")
+![found lanes](./output_images/straight_lines1_8_lanes_found.jpg "found lanes in image")
 
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
@@ -183,5 +194,5 @@ However - applying my current approach to the challenge videos the result was ra
 
 * Apply more pre-processing to the frames - i.e. normalize them.
 * Use adaptive thresholds based on some statistics of the image
-* Start applying gradient thresholding again - I dropped it intentionally to speed up the video pipeline but it could be helpful to identify wrong pixels (which does not belong to a lane).
+* Use the other color thresholds which performed quite good initially but could not hold their performance when applied to more complicated scenarios.
 * Use the knowledge of the previous frame to adapt the statistics / adaptation of the thresholds.

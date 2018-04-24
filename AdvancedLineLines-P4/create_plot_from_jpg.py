@@ -19,8 +19,32 @@ def create_double_plot(file1,file2, desc1, desc2,out):
     plt.axis('off')
     plt.savefig(out, bbox_inches='tight')
 
-create_double_plot('./output_images/straight_lines1_undistort.jpg',
-                   './output_images/straight_lines1_binary.jpg',
-                   'warped image',
+create_double_plot('./output_images/straight_lines1_1_undistort.jpg',
+                   './output_images/straight_lines1_3_binary.jpg',
+                   'undistorted image',
                    'binary thresholded',
                    './output_images/straight_lines1_binary_double.png')
+
+create_double_plot('./output_images/test5_1_undistort.jpg',
+                   './output_images/test5_3_binary.jpg',
+                   'undistorted image',
+                   'binary thresholded',
+                   './output_images/test5_binary_double.png')
+
+create_double_plot('./output_images/straight_lines1_2_undistort_lines.jpg',
+                   './output_images/straight_lines1_5_transformed_lines.jpg',
+                   'original undistorted',
+                   'warped image',
+                   './output_images/straight_lines1_transform_double.png')
+
+create_double_plot('./output_images/straight_lines1_7_windowed_left.jpg',
+                   './output_images/straight_lines1_7_windowed_right.jpg',
+                   'left lane windows',
+                   'right lane windows',
+                   './output_images/straight_lines1_windowed.png')
+
+create_double_plot('./output_images/straight_lines1_9_result.jpg',
+                   './output_images/test5_9_result.jpg',
+                   'straight_lines1',
+                   'test5',
+                   './output_images/result.png')
